@@ -8,7 +8,7 @@ import MediaStreamTrack from './MediaStreamTrack';
 import getUserMedia from './getUserMedia';
 import RTCView from './RTCView';
 
-module.exports = {
+export {
   RTCPeerConnection,
   RTCIceCandidate,
   RTCSessionDescription,
