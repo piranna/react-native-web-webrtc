@@ -241,4 +241,4 @@ const resizeModeStyles = StyleSheet.create({
 });
 
 
-module.exports = RTCView;
+export default RTCView;
