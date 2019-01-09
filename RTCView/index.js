@@ -28,34 +28,14 @@ const RTCViewSourcePropType = PropTypes.oneOfType([
 
 
 class RTCView extends Component {
-    static displayName = 'RTCView'
-
-    static propTypes = {
-        ...View.propTypes,
-        width: PropTypes.number,
-        height: PropTypes.number,
-        streamURL: PropTypes.string,
-        muted: PropTypes.string,
-        autoPlay: PropTypes.string,
-        children: PropTypes.any,
-        defaultSource: RTCViewSourcePropType,
-        onError: PropTypes.func,
-        onLayout: PropTypes.func,
-        onLoad: PropTypes.func,
-        onLoadEnd: PropTypes.func,
-        onLoadStart: PropTypes.func,
-        source: RTCViewSourcePropType,
-    };
-
-    static defaultProps = {};
-
-    static resizeMode = RTCViewResizeMode;
-
     constructor(props, context) {
         super(props, context);
 
         this._uri = resolveAssetSource(props && props.source);
         this.state = {rtcVideoViewState: this._uri ? STATUS_PENDING : STATUS_IDLE};
+
+        this._onError = this._onError.bind(this)
+        this._onLoad = this._onLoad.bind(this)
     }
 
     componentDidMount() {
@@ -112,24 +92,26 @@ class RTCView extends Component {
          * positioned over the rtcVideoView.
          */
         return (
-            <View
-                accessibilityLabel={accessibilityLabel}
-                accessibilityRole='video'
-                accessible={accessible}
-                onLayout={onLayout}
-                style={[
+            React.createElement(View,
+              {
+                accessibilityLabel,
+                accessibilityRole: 'video',
+                accessible,
+                onLayout,
+                style: [
                     styles.initial,
                     style,
                     backgroundRTCView && { backgroundRTCView },
                     resizeModeStyles[resizeMode]
-                ]}
-                testID={testID}
-            >
-                {this.rtcVideoView}
-                {children ? (
-                    <View children={children} pointerEvents='box-none' style={styles.children} />
-                ) : null}
-            </View>
+                ],
+                testID
+              },
+              this.rtcVideoView,
+              children ? (
+                  React.createElement(View,
+                    {children, pointerEvents: 'box-none', style: styles.children})
+              ) : null
+            )
         );
     }
 
@@ -158,7 +140,8 @@ class RTCView extends Component {
         }
     }
 
-    _onError = (nativeEvent) => {
+    _onError(nativeEvent) {
+      console.log('_onError', nativeEvent)
         const { onError } = this.props;
 
         this._destroyRTCViewLoader();
@@ -168,7 +151,8 @@ class RTCView extends Component {
         this._onLoadEnd();
     }
 
-    _onLoad = (nativeEvent) => {
+    _onLoad(nativeEvent) {
+      console.log('_onLoad', nativeEvent)
         const { onLoad } = this.props;
 
         this._destroyRTCViewLoader();
@@ -192,6 +176,52 @@ class RTCView extends Component {
         if (onLoadStart) { onLoadStart(); }
     }
 }
+Object.defineProperties(RTCView,
+{
+  displayName:
+  {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    value: 'RTCView'
+  },
+  propTypes:
+  {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    value: {
+      ...View.propTypes,
+      width: PropTypes.number,
+      height: PropTypes.number,
+      streamURL: PropTypes.string,
+      muted: PropTypes.string,
+      autoPlay: PropTypes.string,
+      children: PropTypes.any,
+      defaultSource: RTCViewSourcePropType,
+      onError: PropTypes.func,
+      onLayout: PropTypes.func,
+      onLoad: PropTypes.func,
+      onLoadEnd: PropTypes.func,
+      onLoadStart: PropTypes.func,
+      source: RTCViewSourcePropType,
+    }
+  },
+  defaultProps:
+  {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    value: {}
+  },
+  resizeMode:
+  {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    value: RTCViewResizeMode
+  }
+})
 
 const styles = StyleSheet.create({
     initial: {
