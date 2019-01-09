@@ -24,10 +24,10 @@
     "web",
     "webrtc"
   ],
-  "dependencies": {
+  "peerDependencies": {
     "prop-types": "^15.6.0",
     "react": "^16.0.0",
-    "react-native-web": "^0.1.12"
+    "react-native-web": "0.x"
   },
   "bugs": {
     "url": "https://github.com/liivevideo/react-native-web-webrtc/issues"
