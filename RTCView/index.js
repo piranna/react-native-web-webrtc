@@ -118,9 +118,9 @@ class RTCView extends Component {
     _createRTCViewLoader() {
         this._destroyRTCViewLoader();
 
-        const {streamURL, autoPlay, muted} = this.props;
+        const {srcObject, autoPlay, muted} = this.props;
 
-        var attributes = {src: streamURL}
+        var attributes = {srcObject}
         if (muted) attributes.muted = true
         if (autoPlay) attributes.autoplay = true
 
@@ -194,7 +194,10 @@ Object.defineProperties(RTCView,
       ...View.propTypes,
       width: PropTypes.number,
       height: PropTypes.number,
-      streamURL: PropTypes.string,
+      srcObject: PropTypes.shape({
+        addTrack: PropTypes.func.isRequired,
+        removeTrack: PropTypes.func.isRequired
+      }),
       muted: PropTypes.string,
       autoPlay: PropTypes.string,
       children: PropTypes.any,
