@@ -28,153 +28,11 @@ const RTCViewSourcePropType = PropTypes.oneOfType([
 
 
 class RTCView extends Component {
-    constructor(props, context) {
-        super(props, context);
+  render() {
+    const {mirror, objectFit, srcObject, zOrder} = this.props;
 
-        this._uri = resolveAssetSource(props && props.source);
-        this.state = {rtcVideoViewState: this._uri ? STATUS_PENDING : STATUS_IDLE};
-
-        this._onError = this._onError.bind(this)
-        this._onLoad = this._onLoad.bind(this)
-    }
-
-    componentDidMount() {
-        if (this.state.rtcVideoViewState === STATUS_PENDING) {
-            this._createRTCViewLoader();
-        }
-    }
-
-    componentDidUpdate() {
-        if (this.rtcVideoView) return;
-
-        this.componentDidMount()
-    }
-
-    componentWillReceiveProps(nextProps) {
-        const nextUri = resolveAssetSource(nextProps.source);
-
-        if (this._uri !== nextUri) {
-            this._uri = nextUri
-            this.setState({rtcVideoViewState: nextUri ? STATUS_PENDING : STATUS_IDLE});
-        }
-    }
-
-    componentWillUnmount() {
-        this._destroyRTCViewLoader();
-    }
-
-    render() {
-        const { rtcVideoViewState } = this.state;
-        const {
-            accessibilityLabel,
-            accessible,
-            children,
-            defaultSource,
-            onLayout,
-            source,
-            testID
-        } = this.props;
-
-        const displayRTCView = resolveAssetSource((rtcVideoViewState === STATUS_LOADED) ? source : defaultSource);
-        const backgroundRTCView = displayRTCView ? `url("${displayRTCView}")` : null;
-        let style = StyleSheet.flatten(this.props.style) || {};
-
-        const resizeMode = this.props.resizeMode || style.resizeMode || RTCViewResizeMode.cover;
-        // remove 'resizeMode' style, as it is not supported by View (N.B. styles are frozen in dev)
-        style = process.env.NODE_ENV !== 'production' ? { ...style } : style;
-        delete style.resizeMode;
-
-        /**
-         * RTCView is a non-stretching View. The rtcVideoView is displayed as a background
-         * rtcVideoView to support `resizeMode`. The HTML rtcVideoView is hidden but used to
-         * provide the correct responsive rtcVideoView dimensions, and to support the
-         * rtcVideoView context menu. Child content is rendered into an element absolutely
-         * positioned over the rtcVideoView.
-         */
-        return (
-            React.createElement(View,
-              {
-                accessibilityLabel,
-                accessibilityRole: 'video',
-                accessible,
-                onLayout,
-                style: [
-                    styles.initial,
-                    style,
-                    backgroundRTCView && { backgroundRTCView },
-                    resizeModeStyles[resizeMode]
-                ],
-                testID
-              },
-              this.rtcVideoView,
-              children ? (
-                  React.createElement(View,
-                    {children, pointerEvents: 'box-none', style: styles.children})
-              ) : null
-            )
-        );
-    }
-
-    _createRTCViewLoader() {
-        this._destroyRTCViewLoader();
-
-        const {srcObject, autoPlay, muted} = this.props;
-
-        var attributes = {srcObject}
-        if (muted) attributes.muted = true
-        if (autoPlay) attributes.autoplay = true
-
-        this.rtcVideoView = createElement('video', attributes);
-        this.rtcVideoView.onerror = this._onError;
-        this.rtcVideoView.onloadeddata = this._onLoad;
-        this.rtcVideoView.src = this._uri;
-
-        this._onLoadStart();
-    }
-
-    _destroyRTCViewLoader() {
-        if (this.rtcVideoView) {
-            this.rtcVideoView.onerror = null;
-            this.rtcVideoView.onload = null;
-            this.rtcVideoView = null;
-        }
-    }
-
-    _onError(nativeEvent) {
-      console.log('_onError', nativeEvent)
-        const { onError } = this.props;
-
-        this._destroyRTCViewLoader();
-        this.setState({rtcVideoViewState: STATUS_ERRORED});
-
-        if (onError) onError({nativeEvent})
-        this._onLoadEnd();
-    }
-
-    _onLoad(nativeEvent) {
-      console.log('_onLoad', nativeEvent)
-        const { onLoad } = this.props;
-
-        this._destroyRTCViewLoader();
-        this.setState({rtcVideoViewState: STATUS_LOADED});
-
-        if (onLoad) onLoad({nativeEvent})
-        this._onLoadEnd();
-    }
-
-    _onLoadEnd() {
-        const { onLoadEnd } = this.props;
-
-        if (onLoadEnd) { onLoadEnd(); }
-    }
-
-    _onLoadStart() {
-        const { onLoadStart } = this.props;
-
-        this.setState({rtcVideoViewState: STATUS_LOADING});
-
-        if (onLoadStart) { onLoadStart(); }
-    }
+    return createElement('video', {srcObject});
+  }
 }
 Object.defineProperties(RTCView,
 {
@@ -191,23 +49,50 @@ Object.defineProperties(RTCView,
     enumerable: true,
     writable: true,
     value: {
-      ...View.propTypes,
-      width: PropTypes.number,
-      height: PropTypes.number,
+      /**
+       * Indicates whether the video specified by {@link #streamURL} should be
+       * mirrored during rendering. Commonly, applications choose to mirror the
+       * user-facing camera.
+       */
+      mirror: PropTypes.bool,
+
+      /**
+       * In the fashion of
+       * https://www.w3.org/TR/html5/embedded-content-0.html#dom-video-videowidth
+       * and https://www.w3.org/TR/html5/rendering.html#video-object-fit,
+       * resembles the CSS style object-fit.
+       */
+      objectFit: PropTypes.oneOf(['contain', 'cover']),
+
       srcObject: PropTypes.shape({
         addTrack: PropTypes.func.isRequired,
         removeTrack: PropTypes.func.isRequired
       }),
-      muted: PropTypes.string,
-      autoPlay: PropTypes.string,
-      children: PropTypes.any,
-      defaultSource: RTCViewSourcePropType,
-      onError: PropTypes.func,
-      onLayout: PropTypes.func,
-      onLoad: PropTypes.func,
-      onLoadEnd: PropTypes.func,
-      onLoadStart: PropTypes.func,
-      source: RTCViewSourcePropType,
+
+      /**
+       * Similarly to the CSS property z-index, specifies the z-order of this
+       * RTCView in the stacking space of all RTCViews. When RTCViews overlap,
+       * zOrder determines which one covers the other. An RTCView with a larger
+       * zOrder generally covers an RTCView with a lower one.
+       *
+       * Non-overlapping RTCViews may safely share a z-order (because one does not
+       * have to cover the other).
+       *
+       * The support for zOrder is platform-dependent and/or
+       * implementation-specific. Thus, specifying a value for zOrder is to be
+       * thought of as giving a hint rather than as imposing a requirement. For
+       * example, video renderers such as RTCView are commonly implemented using
+       * OpenGL and OpenGL views may have different numbers of layers in their
+       * stacking space. Android has three: a layer bellow the window (aka
+       * default), a layer bellow the window again but above the previous layer
+       * (aka media overlay), and above the window. Consequently, it is advisable
+       * to limit the number of utilized layers in the stacking space to the
+       * minimum sufficient for the desired display. For example, a video call
+       * application usually needs a maximum of two zOrder values: 0 for the
+       * remote video(s) which appear in the background, and 1 for the local
+       * video(s) which appear above the remote video(s).
+       */
+      zOrder: PropTypes.number
     }
   },
   defaultProps:
