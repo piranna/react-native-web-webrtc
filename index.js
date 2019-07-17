@@ -7,6 +7,7 @@ import MediaStream from './MediaStream';
 import MediaStreamTrack from './MediaStreamTrack';
 import getUserMedia from './getUserMedia';
 import RTCView from './RTCView';
+import mediaDevices from './MediaDevices';
 
 export {
   RTCPeerConnection,
@@ -16,4 +17,5 @@ export {
   MediaStreamTrack,
   getUserMedia,
   RTCView,
+  mediaDevices,
 };
